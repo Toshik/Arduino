@@ -7,14 +7,14 @@ This project brings support for ESP8266 chip to the Arduino environment. ESP8266
 
 | OS | Build status | Latest release |
 | --- | ------------ | -------------- |
-| Linux | [![Linux build status](http://img.shields.io/travis/igrr/Arduino.svg)](https://travis-ci.org/igrr/Arduino) | [arduino-1.6.1-linux64.tar.xz](../../releases/download/1.6.1-esp8266-1/arduino-1.6.1-linux64.tar.xz) |
+| ~~Linux~~ | [![Linux build status](http://img.shields.io/travis/igrr/Arduino.svg)](https://travis-ci.org/igrr/Arduino) | [~~arduino-1.6.1-linux64.tar.xz~~](../../releases/download/1.6.1-esp8266-1/arduino-1.6.1-linux64.tar.xz)|
 | Windows | [![Windows build status](https://ci.appveyor.com/api/projects/status/4url7iarsbbfc2jb?svg=true)](https://ci.appveyor.com/project/Toshik/arduino) |  [arduino-1.6.1-p1-windows.zip](https://github.com/Toshik/Arduino/releases/download/1.6.1-esp8266-1/arduino-1.6.1-p1-windows.zip) |
-| OS X |  | [arduino-1.6.1-macosx-java-latest-signed.zip](../../releases/download/1.6.1-esp8266-1/arduino-1.6.1-macosx-java-latest-signed.zip) |
+| ~~OS X~~ |  | [~~arduino-1.6.1-macosx-java-latest-signed.zip~~](../../releases/download/1.6.1-esp8266-1/arduino-1.6.1-macosx-java-latest-signed.zip) |
 
 
 ### Building from source ###
 ```
-$ git clone https://github.com/esp8266/Arduino.git
+$ git clone https://github.com/Toshik/Arduino.git
 $ cd Arduino/build
 $ ant dist
 ```
