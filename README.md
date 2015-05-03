@@ -70,11 +70,19 @@ This is mostly similar to WiFi shield library. Differences include:
 
 - ```WiFi.mode(m)```: set mode to ```WIFI_AP```, ```WIFI_STA```, or ```WIFI_AP_STA```.
 - call ```WiFi.softAP(ssid)``` to set up an open network
-- call ```WiFi.softAP(ssid, passphrase)``` to set up a WPA2-PSK network
+- call ```WiFi.softAP(ssid, password)``` to set up a WPA2-PSK network (password should be at least 8 characters)
 - ```WiFi.macAddress(mac)``` is for STA, ```WiFi.softAPmacAddress(mac)``` is for AP.
 - ```WiFi.localIP()``` is for STA, ```WiFi.softAPIP()``` is for AP.
 - ```WiFi.RSSI()``` doesn't work
 - ```WiFi.printDiag(Serial);``` will print out some diagnostic info
+- ```WiFiUDP``` class supports sending and receiving multicast packets on STA interface.
+When sending a multicast packet, replace ```udp.beginPacket(addr, port)``` with 
+```udp.beginPacketMulticast(addr, port, WiFi.localIP())```.
+When listening to multicast packets, replace ```udp.begin(port)``` with 
+```udp.beginMulticast(WiFi.localIP(), multicast_ip_addr, port)```.
+You can use ```udp.destinationIP()``` to tell whether the packet received was
+sent to the multicast or unicast address.
+Also note that multicast doesn't work on softAP interface.
 
 WiFiServer, WiFiClient, and WiFiUDP behave mostly the same way as with WiFi shield library.
 Four samples are provided for this library.
@@ -110,7 +118,7 @@ The implementation supports the entire Arduino SPI API including transactions, e
 
 APIs related to deep sleep and watchdog timer are available in the ```ESP``` object.
 
-```ESP.deepSleep(microseconds, mode)``` will put the chip into deep sleep. ```mode``` is one of ```WAKE_DEFAULT```, ```WAKE_RFCAL```, ```WAKE_NO_RFCAL```, ```WAKE_RF_DISABLED```.
+```ESP.deepSleep(microseconds, mode)``` will put the chip into deep sleep. ```mode``` is one of ```WAKE_DEFAULT```, ```WAKE_RFCAL```, ```WAKE_NO_RFCAL```, ```WAKE_RF_DISABLED```. (GPIO16 needs to be tied to RST to wake from deepSleep.)
 
 ```ESP.wdtEnable()```, ```ESP.wdtDisable()```, and ```ESP.wdtFeed()``` provide some control over the watchdog timer.
 
@@ -147,7 +155,6 @@ toggle power).
 - analogWrite (PWM). ESP8266 has only one hardware PWM source. It is not yet clear how to use it with analogWrite API. Software PWM is also an option, but apparently it causes issues with WiFi connectivity.
 - pulseIn
 - I2C slave mode
-- Serial modes other than 8n1
 - WiFi.RSSI. SDK doesn't seem to have an API to get RSSI for the current network. So far the only
 	way to obtain RSSI is to disconnect, perform a scan, and get the RSSI value from there.
 - Upload sketches via WiFi. Conceptually and technically simple, but need to figure out how to provide the best UX for this feature.
