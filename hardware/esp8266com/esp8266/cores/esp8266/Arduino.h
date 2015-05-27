@@ -38,7 +38,6 @@ extern "C" {
 #include "pgmspace.h"
 #include "esp8266_peri.h"
 #include "twi.h"
-#include "spiffs/spiffs.h"
 
 void yield(void);
 
@@ -113,8 +112,6 @@ void timer1_write(uint32_t ticks); //maximum ticks 8388607
 #undef abs
 #endif
 
-#define min(a,b) ((a)<(b)?(a):(b))
-#define max(a,b) ((a)>(b)?(a):(b))
 #define abs(x) ((x)>0?(x):-(x))
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 #define round(x)     ((x)>=0?(long)((x)+0.5):(long)((x)-0.5))
@@ -135,7 +132,7 @@ void ets_intr_unlock();
 extern uint32_t interruptsState;
 
 #define interrupts() xt_enable_interrupts(interruptsState)
-#define noInterrupts() xt_disable_interrupts(interruptsState, 15)
+#define noInterrupts() __asm__ __volatile__("rsil %0,15; esync; isync; dsync" : "=a" (interruptsState))
 
 #define clockCyclesPerMicrosecond() ( F_CPU / 1000000L )
 #define clockCyclesToMicroseconds(a) ( (a) / clockCyclesPerMicrosecond() )
@@ -212,9 +209,11 @@ void loop(void);
 #include "WString.h"
 
 #include "HardwareSerial.h"
-#include "FileSystem.h"
 #include "Esp.h"
 #include "debug.h"
+
+#define min(a,b) ((a)<(b)?(a):(b))
+#define max(a,b) ((a)>(b)?(a):(b))
 
 uint16_t makeWord(uint16_t w);
 uint16_t makeWord(byte h, byte l);

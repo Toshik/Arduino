@@ -31,6 +31,11 @@ enum HTTPUploadStatus { UPLOAD_FILE_START, UPLOAD_FILE_WRITE, UPLOAD_FILE_END };
 
 #define HTTP_DOWNLOAD_UNIT_SIZE 1460
 #define HTTP_UPLOAD_BUFLEN 2048
+#define HTTP_MAX_DATA_WAIT 1000 //ms to wait for the client to send the request
+#define HTTP_MAX_CLOSE_WAIT 2000 //ms to wait for the client to close the connection
+
+#define CONTENT_LENGTH_UNKNOWN ((size_t) -1)
+#define CONTENT_LENGTH_NOT_SET ((size_t) -2)
 
 typedef struct {
   HTTPUploadStatus status;
@@ -73,9 +78,24 @@ public:
   // content_type - HTTP content type, like "text/plain" or "image/png"
   // content - actual content body
   void send(int code, const char* content_type = NULL, String content = String(""));
+  void send(int code, char* content_type, String content);
+  void send(int code, String content_type, String content);
 
+  void setContentLength(size_t contentLength) { _contentLength = contentLength; }
   void sendHeader(String name, String value, bool first = false);
   void sendContent(String content);
+
+template<typename T> size_t streamFile(T &file, String contentType){
+  setContentLength(file.size());
+  if (String(file.name()).endsWith(".gz") && 
+      contentType != "application/x-gzip" &&
+      contentType != "application/octet-stream"){
+    sendHeader("Content-Encoding", "gzip");
+  }
+  send(200, contentType, "");
+  return _currentClient.write(file, HTTP_DOWNLOAD_UNIT_SIZE);
+}
+  
 protected:
   void _handleRequest();
   bool _parseRequest(WiFiClient& client);
@@ -83,6 +103,7 @@ protected:
   static const char* _responseCodeToString(int code);
   void _parseForm(WiFiClient& client, String boundary, uint32_t len);
   void _uploadWriteByte(uint8_t b);
+  uint8_t _uploadReadByte(WiFiClient& client);
   
   struct RequestHandler;
   struct RequestArgument {
@@ -100,6 +121,7 @@ protected:
   RequestArgument* _currentArgs;
   HTTPUpload       _currentUpload;
 
+  size_t           _contentLength;
   String           _responseHeaders;
 
   RequestHandler*  _firstHandler;
