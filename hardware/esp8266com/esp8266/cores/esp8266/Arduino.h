@@ -35,7 +35,6 @@ extern "C" {
 
 #include "stdlib_noniso.h"
 #include "binary.h"
-#include "pgmspace.h"
 #include "esp8266_peri.h"
 #include "twi.h"
 
@@ -52,6 +51,8 @@ void yield(void);
 #define INPUT_PULLDOWN    0x04
 #define OUTPUT            0x01
 #define OUTPUT_OPEN_DRAIN 0x03
+#define WAKEUP_PULLUP     0x05
+#define WAKEUP_PULLDOWN   0x07
 #define SPECIAL           0xF8 //defaults to the usable BUSes uart0rx/tx uart1tx and hspi
 #define FUNCTION_0        0x08
 #define FUNCTION_1        0x18
@@ -100,12 +101,28 @@ void yield(void);
 #define timer1_enabled()        ((T1C & (1 << TCTE)) != 0)
 #define timer1_interrupted()    ((T1C & (1 << TCIS)) != 0)
 
+typedef void(*timercallback)(void);
+
 void timer1_isr_init(void);
 void timer1_enable(uint8_t divider, uint8_t int_type, uint8_t reload);
 void timer1_disable(void);
-void timer1_attachInterrupt(void (*userFunc)(void));
+void timer1_attachInterrupt(timercallback userFunc);
 void timer1_detachInterrupt(void);
 void timer1_write(uint32_t ticks); //maximum ticks 8388607
+
+// timer0 is a special CPU timer that has very high resolution but with
+// limited control.
+// it uses CCOUNT (ESP.GetCycleCount()) as the non-resetable timer counter
+// it does not support divide, type, or reload flags
+// it is auto-disabled when the compare value matches CCOUNT
+// it is auto-enabled when the compare value changes
+#define timer0_interrupted()    (ETS_INTR_PENDING() & (_BV(ETS_COMPARE0_INUM)))
+#define timer0_read() ((__extension__({uint32_t count;__asm__ __volatile__("esync; rsr %0,ccompare0":"=a" (count));count;})))
+#define timer0_write(count) __asm__ __volatile__("wsr %0,ccompare0; esync"::"a" (count) : "memory")
+
+void timer0_isr_init(void);
+void timer0_attachInterrupt(timercallback userFunc);
+void timer0_detachInterrupt(void);
 
 // undefine stdlib's abs if encountered
 #ifdef abs
@@ -171,6 +188,7 @@ int analogRead(uint8_t);
 void analogReference(uint8_t mode);
 void analogWrite(uint8_t, int);
 void analogWriteFreq(uint32_t freq);
+void analogWriteRange(uint32_t range);
 
 unsigned long millis(void);
 unsigned long micros(void);
@@ -191,6 +209,7 @@ void loop(void);
 // This comes from the pins_*.c file for the active board configuration.
 #define digitalPinToPort(pin)       (0)
 #define digitalPinToBitMask(pin)    (1UL << (pin))
+#define digitalPinToTimer(pin)      (0)
 #define portOutputRegister(port)    ((volatile uint32_t*) GPO)
 #define portInputRegister(port)     ((volatile uint32_t*) GPI)
 #define portModeRegister(port)      ((volatile uint32_t*) GPE)
@@ -198,12 +217,15 @@ void loop(void);
 #define NOT_A_PIN -1
 #define NOT_A_PORT -1
 #define NOT_AN_INTERRUPT -1
+#define NOT_ON_TIMER 0
 
 #ifdef __cplusplus
 } // extern "C"
 #endif
 
 #ifdef __cplusplus
+
+#include "pgmspace.h"
 
 #include "WCharacter.h"
 #include "WString.h"

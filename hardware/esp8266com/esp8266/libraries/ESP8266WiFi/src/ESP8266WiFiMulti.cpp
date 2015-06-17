@@ -25,6 +25,7 @@
 
 #include "ESP8266WiFiMulti.h"
 #include <limits.h>
+#include <string.h>
 
 ESP8266WiFiMulti::ESP8266WiFiMulti() {
 }
@@ -47,6 +48,10 @@ wl_status_t ESP8266WiFiMulti::run(void) {
         uint8 bestBSSID[6];
         int32_t bestChannel;
 
+        DEBUG_WIFI_MULTI("[WIFI] delete old wifi config...\n");
+        WiFi.disconnect();
+
+        DEBUG_WIFI_MULTI("[WIFI] start scan\n");
         // WiFi.scanNetworks will return the number of networks found
         int8_t n = WiFi.scanNetworks();
 
@@ -67,7 +72,6 @@ wl_status_t ESP8266WiFiMulti::run(void) {
                 bool hidden_scan;
 
                 WiFi.getNetworkInfo(i, ssid_scan, sec_scan, rssi_scan, BSSID_scan, chan_scan, hidden_scan);
-
 
                 bool known = false;
                 for(uint32_t x = 0; x < APlist.size(); x++) {
@@ -93,7 +97,7 @@ wl_status_t ESP8266WiFiMulti::run(void) {
                     DEBUG_WIFI_MULTI("      ");
                 }
 
-                DEBUG_WIFI_MULTI(" %d: [%d][%02X:%02X:%02X:%02X:%02X:%02X] %s (%d) %c\n", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3], BSSID_scan[4], BSSID_scan[5], ssid_scan, rssi_scan, (sec_scan == ENC_TYPE_NONE) ? ' ' : '*');
+                DEBUG_WIFI_MULTI(" %d: [%d][%02X:%02X:%02X:%02X:%02X:%02X] %s (%d) %c\n", i, chan_scan, BSSID_scan[0], BSSID_scan[1], BSSID_scan[2], BSSID_scan[3], BSSID_scan[4], BSSID_scan[5], ssid_scan.c_str(), rssi_scan, (sec_scan == ENC_TYPE_NONE) ? ' ' : '*');
                 delay(0);
             }
         }
@@ -148,24 +152,29 @@ bool ESP8266WiFiMulti::APlistAdd(const char* ssid, const char *passphrase) {
 
     WifiAPlist_t newAP;
 
-    newAP.ssid = (char*) malloc(strlen(ssid));
+    if(!ssid || *ssid == 0x00 || strlen(ssid) > 31) {
+        // fail SSID to long or missing!
+        return false;
+    }
+
+    if(passphrase && strlen(passphrase) > 63) {
+        // fail passphrase to long!
+        return false;
+    }
+
+    newAP.ssid = strdup(ssid);
 
     if(!newAP.ssid) {
         return false;
     }
 
-    strcpy(newAP.ssid, ssid);
-
     if(passphrase && *passphrase != 0x00) {
-        newAP.passphrase = (char*) malloc(strlen(passphrase));
+        newAP.passphrase = strdup(passphrase);
+        if(!newAP.passphrase) {
+            free(newAP.ssid);
+            return false;
+        }
     }
-
-    if(!newAP.passphrase) {
-        free(newAP.ssid);
-        return false;
-    }
-
-    strcpy(newAP.passphrase, passphrase);
 
     APlist.push_back(newAP);
     return true;
