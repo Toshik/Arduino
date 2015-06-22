@@ -59,7 +59,7 @@ void preloop_update_frequency() {
 extern void (*__init_array_start)(void);
 extern void (*__init_array_end)(void);
 
-static cont_t g_cont;
+cont_t g_cont __attribute__ ((aligned (16)));
 static os_event_t g_loop_queue[LOOP_QUEUE_SIZE];
 
 static uint32_t g_micros_at_task_start;
@@ -114,24 +114,14 @@ static void do_global_ctors(void) {
 }
 
 void init_done() {
+    system_set_os_print(1);
     do_global_ctors();
     esp_schedule();
 }
 
 extern "C" {
-void user_rf_pre_init() {
-    
-}
-}
-
-extern "C" {
 void user_init(void) {
-    uart_div_modify(0, UART_CLK_FREQ / (74480));
-
     system_rtc_mem_read(0, &resetInfo, sizeof(struct rst_info));
-    if(resetInfo.reason == REASON_WDT_RST || resetInfo.reason == REASON_EXCEPTION_RST) {
-        os_printf("Last Reset:\n - flag=%d\n - Fatal exception (%d):\n - epc1=0x%08x,epc2=0x%08x,epc3=0x%08x,excvaddr=0x%08x,depc=0x%08x\n", resetInfo.reason, resetInfo.exccause, resetInfo.epc1, resetInfo.epc2, resetInfo.epc3, resetInfo.excvaddr, resetInfo.depc);
-    }
     struct rst_info info = { 0 };
     system_rtc_mem_write(0, &info, sizeof(struct rst_info));
 
