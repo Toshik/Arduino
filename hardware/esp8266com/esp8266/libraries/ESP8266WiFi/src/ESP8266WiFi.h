@@ -32,6 +32,9 @@ extern "C" {
 #include "WiFiClient.h"
 #include "WiFiServer.h"
 
+#define WIFI_SCAN_RUNNING   (-1)
+#define WIFI_SCAN_FAILD     (-2)
+
 enum WiFiMode { WIFI_OFF = 0, WIFI_STA = 1, WIFI_AP = 2, WIFI_AP_STA = 3 };
 
 class ESP8266WiFiClass
@@ -72,8 +75,9 @@ public:
      * param ssid: Pointer to the SSID string.
      * param passphrase: Pointer to passphrase, 8 characters min.
      * param channel: WiFi channel number, 1 - 13.
+     * param ssid_hidden: Network cloaking? 0 = broadcast SSID, 1 = hide SSID
      */
-    void softAP(const char* ssid, const char* passphrase, int channel = 1);
+    void softAP(const char* ssid, const char* passphrase, int channel = 1, int ssid_hidden = 0);
 
     /* Change Ip configuration settings disabling the dhcp client
         *
@@ -189,12 +193,26 @@ public:
 
     int32_t RSSI();
 
+
+    /*
+     * called to get the scan state in Async mode
+     *
+     * return -1 if scan not fin
+     * return -2 if scan not triggered
+     */
+    int8_t scanComplete();
+
+    /*
+     * delete last scan result from RAM
+     */
+    void scanDelete();
+
     /*
      * Start scan WiFi networks available
      *
      * return: Number of discovered networks
      */
-    int8_t scanNetworks();
+    int8_t scanNetworks(bool async = false);
 
     /*
      * Return the SSID discovered during the network scan.
@@ -314,13 +332,17 @@ protected:
     void * _getScanInfoByIndex(int i);
     static void _smartConfigCallback(uint32_t status, void* result);
     static void _eventCallback(void *event);
-    bool _smartConfigStarted = false;
-    bool _smartConfigDone = false;
+    bool _smartConfigStarted;
+    bool _smartConfigDone;
 
     bool _useApMode;
     bool _useClientMode;
 	bool _useStaticIp;
 	
+	static bool _scanAsync;
+	static bool _scanStarted;
+	static bool _scanComplete;
+
     static size_t _scanCount;
     static void* _scanResult;
 

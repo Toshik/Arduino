@@ -158,9 +158,7 @@ APIs related to deep sleep and watchdog timer are available in the ```ESP``` obj
 
 ```ESP.deepSleep(microseconds, mode)``` will put the chip into deep sleep. ```mode``` is one of ```WAKE_RF_DEFAULT```, ```WAKE_RFCAL```, ```WAKE_NO_RFCAL```, ```WAKE_RF_DISABLED```. (GPIO16 needs to be tied to RST to wake from deepSleep.)
 
-```ESP.wdtEnable()```, ```ESP.wdtDisable()```, and ```ESP.wdtFeed()``` provide some control over the watchdog timer.
-
-```ESP.reset()``` resets the CPU.
+```ESP.restart()``` restarts the CPU.
 
 ```ESP.getFreeHeap()``` returns the free heap size.
 
@@ -176,6 +174,16 @@ Several APIs may be used to get flash chip info:
 
 ```ESP.getCycleCount()``` returns the cpu instruction cycle count since start as an unsigned 32-bit.  This is useful for accurate timing of very short actions like bit banging.
 
+```ESP.getVcc()``` may be used to measure supply voltage. ESP needs to reconfigure the ADC
+at startup in order for this feature to be available. Add the following line to the top
+of your sketch to use ```getVcc```:
+```
+ADC_MODE(ADC_VCC);
+```
+TOUT pin has to be disconnected in this mode.
+
+Note that by default ADC is configured to read from TOUT pin using ```analogRead(A0)```, and
+```ESP.getVCC()``` is not available.
 
 #### OneWire (from https://www.pjrc.com/teensy/td_libs_OneWire.html) ####
 
@@ -207,7 +215,7 @@ Libraries that don't rely on low-level access to AVR registers should work well.
 - [aREST](https://github.com/marcoschwartz/aREST) REST API handler library.
 - [Blynk](https://github.com/blynkkk/blynk-library) - easy IoT framework for Makers (check out the [Kickstarter page](http://tiny.cc/blynk-kick)).
 - [DallasTemperature](https://github.com/milesburton/Arduino-Temperature-Control-Library.git)
-- [DHT11](https://github.com/adafruit/DHT-sensor-library) - initialize DHT as follows: ```DHT dht(DHTPIN, DHTTYPE, 15);```
+- [DHT11](https://github.com/adafruit/DHT-sensor-library) - Download latest v1.1.0 library and no changes are necessary.  Older versions should initialize DHT as follows: ```DHT dht(DHTPIN, DHTTYPE, 15);```
 - [NeoPixelBus](https://github.com/Makuna/NeoPixelBus) - Arduino NeoPixel library compatible with esp8266.
 - [PubSubClient](https://github.com/Imroy/pubsubclient) MQTT library by @Imroy.
 - [RTC](https://github.com/Makuna/Rtc) - Arduino Library for Ds1307 & Ds3231 compatible with esp8266.

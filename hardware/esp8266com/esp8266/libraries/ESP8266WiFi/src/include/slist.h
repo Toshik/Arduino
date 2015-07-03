@@ -21,7 +21,7 @@ protected:
       return;
     }
 
-    for (T* prev = _s_first; prev->_next; _s_first = _s_first->_next) {
+    for (T* prev = _s_first; prev->_next; prev = prev->_next) {
       if (prev->_next == self) {
         prev->_next = self->_next;
         self->_next = 0;
