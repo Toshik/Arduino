@@ -87,38 +87,6 @@ int vsnprintf(char * buffer, size_t size, const char * format, va_list arg) {
     return ets_vsnprintf(buffer, size, format, arg);
 }
 
-int memcmp(const void *s1, const void *s2, size_t n) {
-    return ets_memcmp(s1, s2, n);
-}
-
-void* memcpy(void *dest, const void *src, size_t n) {
-    return ets_memcpy(dest, src, n);
-}
-
-void* memset(void *s, int c, size_t n) {
-    return ets_memset(s, c, n);
-}
-
-int strcmp(const char *s1, const char *s2) {
-    return ets_strcmp(s1, s2);
-}
-
-char* strcpy(char *dest, const char *src) {
-    return ets_strcpy(dest, src);
-}
-
-size_t strlen(const char *s) {
-    return ets_strlen(s);
-}
-
-int strncmp(const char *s1, const char *s2, size_t len) {
-    return ets_strncmp(s1, s2, len);
-}
-
-char* strncpy(char * dest, const char * src, size_t n) {
-    return ets_strncpy(dest, src, n);
-}
-
 size_t ICACHE_FLASH_ATTR strnlen(const char *s, size_t len) {
     // there is no ets_strnlen
     const char *cp;
@@ -160,13 +128,12 @@ char* ICACHE_FLASH_ATTR strcat(char * dest, const char * src) {
 }
 
 char* ICACHE_FLASH_ATTR strncat(char * dest, const char * src, size_t n) {
-    uint32_t offset = strlen(dest);
-    for(uint32_t i = 0; i < n; i++) {
-        *(dest + i + offset) = *(src + i);
-        if(*(src + i) == 0x00) {
-            break;
-        }
+    size_t i;
+    size_t offset = strlen(dest);
+    for(i = 0; i < n && src[i]; i++) {
+        dest[i + offset] = src[i];
     }
+    dest[i + offset] = 0;
     return dest;
 }
 
