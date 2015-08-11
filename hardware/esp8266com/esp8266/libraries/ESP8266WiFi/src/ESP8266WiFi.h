@@ -44,7 +44,7 @@ public:
     ESP8266WiFiClass();
 
     void mode(WiFiMode);
-        
+
     /**
      * Start Wifi connection
      * if passphrase is set the most secure supported mode will be automatically selected
@@ -95,7 +95,7 @@ public:
 		* param dns: 		Defined DNS
         */
     void config(IPAddress local_ip, IPAddress gateway, IPAddress subnet, IPAddress dns);
-	
+
     /* Configure access point
      *
      * param local_ip: access point IP
@@ -103,6 +103,13 @@ public:
      * param subnet: subnet mask
      */
     void softAPConfig(IPAddress local_ip, IPAddress gateway, IPAddress subnet);
+
+    /*
+      * Disconnect from the network (close AP)
+      *
+      * return: one value of wl_status_t enum
+      */
+    int softAPdisconnect(bool wifioff = false);
 
     /*
      * Disconnect from the network
@@ -329,25 +336,26 @@ public:
     /*
      * Start SmartConfig
      *
-     */ 
+     */
     void beginSmartConfig();
-    
+
     /*
      * Query SmartConfig status, to decide when stop config
      *
-     */    
+     */
     bool smartConfigDone();
 
     /*
      * Stop SmartConfig
      *
-     */ 
+     */
     void stopSmartConfig();
 
     friend class WiFiClient;
     friend class WiFiServer;
 
 protected:
+    void _mode(WiFiMode);
     static void _scanDone(void* result, int status);
     void * _getScanInfoByIndex(int i);
     static void _smartConfigCallback(uint32_t status, void* result);
@@ -358,7 +366,7 @@ protected:
     bool _useApMode;
     bool _useClientMode;
 	bool _useStaticIp;
-	
+
 	static bool _scanAsync;
 	static bool _scanStarted;
 	static bool _scanComplete;
